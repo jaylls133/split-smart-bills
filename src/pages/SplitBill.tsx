@@ -32,6 +32,10 @@ import { Person, BillItem, SavedCalculation } from '../types/splitBill';
 import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from 'react-router-dom';
 
+// Define storage constants
+const STORAGE_KEY = 'billsplit_calculations';
+const STORAGE_EXPIRY_DAYS = 30;
+
 interface Person {
   id: number;
   name: string;
