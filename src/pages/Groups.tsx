@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { Button } from '@/components/ui/button';
 import { 
@@ -31,6 +30,7 @@ import {
   UserPlus
 } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
+import { saveWithExpiry, getWithExpiry } from '../utils/storage';
 
 interface Group {
   id: number;
@@ -48,30 +48,12 @@ interface Expense {
   paidBy: string;
 }
 
+const STORAGE_KEY = 'billsplit_groups';
+const STORAGE_EXPIRY_DAYS = 30;
+
 const Groups = () => {
   const { toast } = useToast();
-  const [groups, setGroups] = useState<Group[]>([
-    {
-      id: 1,
-      name: 'Roommates',
-      description: 'Apartment expenses',
-      members: ['You', 'Alex', 'Sam'],
-      expenses: [
-        { id: 1, title: 'Groceries', amount: 84.52, date: '2025-05-10', paidBy: 'You' },
-        { id: 2, title: 'Utilities', amount: 120.00, date: '2025-05-01', paidBy: 'Alex' },
-      ]
-    },
-    {
-      id: 2,
-      name: 'Trip to NYC',
-      description: 'Weekend getaway',
-      members: ['You', 'Taylor', 'Jordan', 'Riley'],
-      expenses: [
-        { id: 3, title: 'Hotel', amount: 350.00, date: '2025-04-25', paidBy: 'You' },
-        { id: 4, title: 'Dinner', amount: 180.75, date: '2025-04-26', paidBy: 'Taylor' },
-      ]
-    }
-  ]);
+  const [groups, setGroups] = useState<Group[]>([]);
   
   const [newGroup, setNewGroup] = useState({
     name: '',
@@ -92,6 +74,50 @@ const Groups = () => {
 
   const [activeGroup, setActiveGroup] = useState<Group | null>(null);
   
+  // Load groups from localStorage when component mounts
+  useEffect(() => {
+    const storedGroups = getWithExpiry<Group[]>(STORAGE_KEY);
+    
+    if (storedGroups && storedGroups.length > 0) {
+      setGroups(storedGroups);
+      toast({
+        title: "Data Loaded",
+        description: `Your groups and expenses have been loaded from storage.`
+      });
+    } else {
+      // Set default groups if no stored data is found
+      setGroups([
+        {
+          id: 1,
+          name: 'Roommates',
+          description: 'Apartment expenses',
+          members: ['You', 'Alex', 'Sam'],
+          expenses: [
+            { id: 1, title: 'Groceries', amount: 84.52, date: '2025-05-10', paidBy: 'You' },
+            { id: 2, title: 'Utilities', amount: 120.00, date: '2025-05-01', paidBy: 'Alex' },
+          ]
+        },
+        {
+          id: 2,
+          name: 'Trip to NYC',
+          description: 'Weekend getaway',
+          members: ['You', 'Taylor', 'Jordan', 'Riley'],
+          expenses: [
+            { id: 3, title: 'Hotel', amount: 350.00, date: '2025-04-25', paidBy: 'You' },
+            { id: 4, title: 'Dinner', amount: 180.75, date: '2025-04-26', paidBy: 'Taylor' },
+          ]
+        }
+      ]);
+    }
+  }, [toast]);
+  
+  // Save groups to localStorage whenever they change
+  useEffect(() => {
+    if (groups.length > 0) {
+      saveWithExpiry(STORAGE_KEY, groups, STORAGE_EXPIRY_DAYS);
+    }
+  }, [groups]);
+  
   const handleCreateGroup = () => {
     if (newGroup.name) {
       const newId = groups.length > 0 ? Math.max(...groups.map(g => g.id)) + 1 : 1;
@@ -108,7 +134,7 @@ const Groups = () => {
       
       toast({
         title: "Group Created",
-        description: `${newGroup.name} has been created successfully.`
+        description: `${newGroup.name} has been created successfully and will be stored for ${STORAGE_EXPIRY_DAYS} days.`
       });
     }
   };
@@ -140,7 +166,7 @@ const Groups = () => {
         
         toast({
           title: "Expense Added",
-          description: `${expense.title} has been added to the group.`
+          description: `${expense.title} has been added to the group and will be stored for ${STORAGE_EXPIRY_DAYS} days.`
         });
       }
     }
@@ -161,7 +187,7 @@ const Groups = () => {
         
         toast({
           title: "Member Added",
-          description: `${newMember.name} has been added to the group.`
+          description: `${newMember.name} has been added to the group and will be stored for ${STORAGE_EXPIRY_DAYS} days.`
         });
       }
     }
@@ -205,6 +231,7 @@ const Groups = () => {
           <div>
             <h1 className="text-3xl font-bold mb-2">Your Groups</h1>
             <p className="text-gray-600">Manage your expense groups and see who owes what</p>
+            <p className="text-sm text-gray-500 mt-1">Data is stored locally for {STORAGE_EXPIRY_DAYS} days</p>
           </div>
           
           <Dialog>
