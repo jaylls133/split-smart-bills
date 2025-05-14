@@ -36,19 +36,6 @@ import { useNavigate } from 'react-router-dom';
 const STORAGE_KEY = 'billsplit_calculations';
 const STORAGE_EXPIRY_DAYS = 30;
 
-interface Person {
-  id: number;
-  name: string;
-  amount: number;
-}
-
-interface BillItem {
-  id: number;
-  name: string;
-  price: number;
-  assignedTo: number[];
-}
-
 const SplitBill = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
