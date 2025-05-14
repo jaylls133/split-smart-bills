@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import SplitBill from "./pages/SplitBill";
 import Groups from "./pages/Groups";
 import ScanReceipt from "./pages/ScanReceipt";
+import SavedCalculations from "./pages/SavedCalculations";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/split" element={<SplitBill />} />
           <Route path="/groups" element={<Groups />} />
           <Route path="/scan" element={<ScanReceipt />} />
+          <Route path="/history" element={<SavedCalculations />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

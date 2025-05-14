@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { CircleDollarSign } from 'lucide-react';
+import { CircleDollarSign, History } from 'lucide-react';
 
 const Navbar = () => {
   return (
@@ -24,6 +24,10 @@ const Navbar = () => {
           </Link>
           <Link to="/scan" className="font-medium text-gray-600 hover:text-bill-blue transition-colors">
             Scan Receipt
+          </Link>
+          <Link to="/history" className="font-medium text-gray-600 hover:text-bill-blue transition-colors">
+            <History className="h-4 w-4 inline mr-1" />
+            History
           </Link>
           <Link to="/" className="btn-primary">
             Get Started

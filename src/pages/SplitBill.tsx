@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '../components/Layout';
 import { Button } from '@/components/ui/button';
@@ -16,7 +15,8 @@ import {
   Plus, 
   Minus, 
   Upload,
-  X 
+  X,
+  Save
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { 
@@ -27,6 +27,10 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { useToast } from "@/components/ui/use-toast";
+import { saveWithExpiry, getWithExpiry } from '../utils/storage';
+import { Person, BillItem, SavedCalculation } from '../types/splitBill';
+import { v4 as uuidv4 } from 'uuid';
+import { useNavigate } from 'react-router-dom';
 
 interface Person {
   id: number;
@@ -43,6 +47,7 @@ interface BillItem {
 
 const SplitBill = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [billTotal, setBillTotal] = useState<number | ''>('');
   const [tipPercentage, setTipPercentage] = useState<number>(15);
   const [taxPercentage, setTaxPercentage] = useState<number | ''>('');
@@ -55,6 +60,7 @@ const SplitBill = () => {
   const [newItemName, setNewItemName] = useState<string>('');
   const [newItemPrice, setNewItemPrice] = useState<number | ''>('');
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [calculationName, setCalculationName] = useState<string>('');
 
   // Calculate splits
   const calculateSplits = () => {
@@ -228,6 +234,54 @@ const SplitBill = () => {
         });
       }, 2000);
     }
+  };
+  
+  const saveCalculation = () => {
+    if (!billTotal || people.every(p => p.amount === 0)) {
+      toast({
+        title: "Cannot save",
+        description: "Please calculate the split first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Generate a unique ID for this calculation
+    const id = uuidv4();
+    
+    // Create the calculation object
+    const calculation: SavedCalculation = {
+      id,
+      date: new Date().toISOString(),
+      billTotal: Number(billTotal),
+      tipPercentage,
+      taxPercentage: taxPercentage ? Number(taxPercentage) : 0,
+      splitMethod,
+      people: [...people],
+      items: [...items],
+      groupName: calculationName || `Calculation ${new Date().toLocaleDateString()}`
+    };
+
+    // Get existing calculations or initialize empty array
+    const existingCalculations = getWithExpiry<SavedCalculation[]>(STORAGE_KEY) || [];
+    
+    // Add new calculation to the array
+    const updatedCalculations = [calculation, ...existingCalculations];
+    
+    // Save to localStorage with expiry
+    saveWithExpiry(STORAGE_KEY, updatedCalculations, STORAGE_EXPIRY_DAYS);
+    
+    toast({
+      title: "Calculation Saved!",
+      description: `Your calculation has been saved and will be available for ${STORAGE_EXPIRY_DAYS} days.`
+    });
+    
+    // Clear the calculation name field
+    setCalculationName('');
+  };
+
+  const viewSavedCalculations = () => {
+    navigate('/history');
   };
   
   return (
@@ -607,11 +661,31 @@ const SplitBill = () => {
               </div>
               
               <div className="mt-8 space-y-4">
-                <Button variant="outline" className="w-full">
+                <div className="space-y-2">
+                  <Label htmlFor="calculation-name">Calculation Name (Optional)</Label>
+                  <Input 
+                    id="calculation-name"
+                    placeholder="e.g. Dinner at Tony's"
+                    value={calculationName}
+                    onChange={(e) => setCalculationName(e.target.value)}
+                  />
+                </div>
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full flex items-center justify-center gap-2"
+                  onClick={saveCalculation}
+                >
+                  <Save className="h-4 w-4" />
                   Save Calculation
                 </Button>
-                <Button variant="outline" className="w-full">
-                  Share With Group
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={viewSavedCalculations}
+                >
+                  View Saved Calculations
                 </Button>
               </div>
             </Card>
