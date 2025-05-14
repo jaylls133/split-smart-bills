@@ -13,7 +13,8 @@ import {
   Check, 
   X, 
   Users, 
-  CircleDollarSign
+  CircleDollarSign,
+  Plus
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Link } from 'react-router-dom';
